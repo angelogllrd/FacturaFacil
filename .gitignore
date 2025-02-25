@@ -173,4 +173,5 @@ cython_debug/
 
 # Otros
 NOTAS.md
+credenciales.json
 img/

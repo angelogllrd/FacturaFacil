@@ -1,0 +1,39 @@
+/* Simulo el estilo de botón de windows para evitar error del hover que se mantiene cuando deshabilito botón */
+QPushButton {
+    background-color: #fdfdfd;
+    border: 1px solid #bababa;
+    border-radius: 4px;
+    padding: 8px;
+    min-width: 71px;
+    font-family: 'Segoe UI';
+    font-size: 11pt;
+}
+QPushButton:hover {
+    background-color: #e0eef9;
+    border: 1px solid #0078d4;
+}
+QPushButton:pressed {
+    padding-top: 9px;     /* Mover ligeramente el contenido hacia abajo */
+    padding-left: 9px;    /* Mover ligeramente el contenido hacia la derecha */
+    padding-bottom: 7px;  /* Para que no se corte al mover para abajo */
+    padding-right: 7px;   /* Para que no se corte al mover para la derecha */
+}
+QPushButton:focus {
+    outline: none;        /* Quito la linea punteada de botones cuando obtienen foco */
+}                         /* En Qt Designer ya quité, pero esto quita también a los botones de QMessageBox, Configuración y Acerca de */
+
+
+/*
+QLineEdit, QTextEdit {
+    border: 1px solid #cccccc;
+    border-radius: 2px;
+    padding: 5px;
+}
+QLineEdit:focus {
+    border: 1px solid #404040;
+    background-color: #f2f2f2;
+}
+QTextEdit:focus {
+    border: 1px solid #404040;
+    background-color: #f2f2f2;
+}*/

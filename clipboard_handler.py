@@ -1,6 +1,7 @@
 import pyperclip
 import re
 
+
 # Indices de cada columna
 colToInd = {
 	'ot': 0,
@@ -15,7 +16,7 @@ colToInd = {
 
 
 def formatClipboard():
-	""" Formatea el texto del portapapeles para obtener la tabla en un formato manejable. """
+	"""Formatea el texto del portapapeles para obtener la tabla en un formato manejable."""
 
 	# Obtengo el contenido del portapapeles
 	cb = pyperclip.paste()
@@ -29,7 +30,7 @@ def formatClipboard():
 
 	# Divido en filas y columnas
 	rows = cb.splitlines() # Separo en filas
-	table = [row.split('\t') for row in rows] # Separo en columnas
+	table = [[col.strip() for col in row.split('\t')] for row in rows] # Separo en columnas (quitando espacios de más)
 
 	# # Imprimo la tabla
 	# for row in table:
@@ -39,30 +40,26 @@ def formatClipboard():
 
 
 def checkClipboard():
-	""" Verifica si lo copiado en el portapapeles es de la hoja de Google Sheets. """
+	"""Verifica si lo copiado en el portapapeles es de la hoja de Google Sheets."""
 
 	# Obtengo la tabla formateada
 	table = formatClipboard()
-	# print(table)
 
 	# Verifico si hay texto en el portapapeles
 	if not table:
-		print('No se copió nada')
-		return False
+		return False, 'No se copió nada'
 
 	# Verifico cantidad correcta de columnas (7 hasta "sin IVA", 8 hasta "con IVA")
 	for row in table:
 		if len(row) < 7 or len(row) > 8: 
-			print('Cantidad de columnas incorrecta')
-			return False
+			return False, 'Lo copiado no se reconoce como la tabla (copiar desde "OT" hasta "Valor S/IVA")'
 
 	# Verifico contenido de cada columna
 	for row in table:
 		# Columna "OT"
 		ot = row[colToInd['ot']]
 		if not ot.isdecimal() and ot != '#N/A':
-			print(f'"OT" con formato inválido: {ot}')
-			return False
+			return False, f'"OT" con formato inválido: {ot}'
 
 		# Columna "Fecha"
 		fecha = row[colToInd['fecha']]
@@ -72,20 +69,17 @@ def checkClipboard():
 			\d{1,2}[-/.]\d{1,2}[-/.]\d{4} # Captura fechas con el año al final
 		'''
 		if not re.match(dateRegex, fecha, re.VERBOSE) and fecha != '#N/A':
-			print(f'"Fecha" con formato inválido: {fecha}')
-			return False
+			return False, f'"Fecha" con formato inválido: {fecha}'
 
 		# Columna "Solicitado por"
 		solicitante = row[colToInd['solicitante']]
 		if not solicitante.isalpha() and len(solicitante) > 10 and solicitante != '#N/A':
-			print(f'"Solicitado por" con formato inválido: {solicitante}')
-			return False
+			return False, f'"Solicitado por" con formato inválido: {solicitante}'
 
 		# Columna "Sector"
 		sector = row[colToInd['sector']]
 		if not sector.isalpha() and len(sector) > 10 and sector != '#N/A':
-			print(f'"Sector" con formato inválido: {sector}')
-			return False
+			return False, f'"Sector" con formato inválido: {sector}'
 
 		# Columnas "Descripción" y "Entrega" no las controlo
 
@@ -93,21 +87,13 @@ def checkClipboard():
 		siniva = row[colToInd['siniva']]
 		sinivaLimpio = siniva.replace('$', '').replace('.', '')
 		if not sinivaLimpio.isdecimal() and sinivaLimpio.count(',') != 1:
-			print(f'"Valor S/IVA" con formato inválido: {siniva}')
-			return False
+			return False, f'"Valor S/IVA" con formato inválido: {siniva}'
 
 		# Columna "Valor c/IVA"
 		if len(row) == 8:
 			coniva = row[colToInd['coniva']]
 			conivaLimpio = coniva.replace('$', '').replace('.', '')
 			if not conivaLimpio.isdecimal() and conivaLimpio.count(',') != 1:
-				print(f'"Valor C/IVA" con formato inválido: {coniva}')
-				return False
+				return False, f'"Valor C/IVA" con formato inválido: {coniva}'
 
-	print('TODO OK!')
-	return True
-
-
-
-while not checkClipboard():
-	pass
+	return True, 'Listo para generar factura'
