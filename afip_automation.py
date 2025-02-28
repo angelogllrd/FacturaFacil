@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-import time
 from datetime import datetime, timedelta
 import json
 
@@ -25,7 +24,7 @@ def automateInvoiceCreation(days, data, callback):
 	"""Automatiza la creación de una factura en el sistema de AFIP."""
 
 	callback(0, 'Entrando al inicio de sesión de AFIP...')
-	
+
 	# Configuración del navegador
 	options = webdriver.ChromeOptions()
 	options.add_experimental_option('detach', True) # Evita que el navegador se cierre al terminar
@@ -43,7 +42,7 @@ def automateInvoiceCreation(days, data, callback):
 		browser.switch_to.window(browser.window_handles[-1])
 	except Exception as e:
 		raise Exception(f'Error entrando al sitio de inicio de sesión: {e}') # Propago el error con contexto
-	
+
 	callback(11, 'Ingresando credenciales...')
 
 	try:
@@ -121,7 +120,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono los conceptos a incluir
 		selectConceptos = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'idconcepto')))
 		Select(selectConceptos).select_by_value('3') # Selecciono "Productos y Servicios"
-		
+
 		# Ajuste de fecha de vencimiento
 		inputFecha = WebDriverWait(browser, 10).until(EC.visibility_of_element_located((By.ID, 'vencimientopago')))
 		currentDateStr = inputFecha.get_attribute('value')
@@ -152,7 +151,7 @@ def automateInvoiceCreation(days, data, callback):
 
 		# Espero a que se cargue la información del receptor
 		WebDriverWait(browser, 10).until(
-		    lambda b: b.find_element(By.ID, 'razonsocialreceptor').get_attribute('value').strip() != '' # Uso una condición personalizada
+			lambda b: b.find_element(By.ID, 'razonsocialreceptor').get_attribute('value').strip() != '' # Uso una condición personalizada
 		)
 
 		# Selecciono "Cuenta Corriente"
@@ -168,7 +167,7 @@ def automateInvoiceCreation(days, data, callback):
 	# ------------------------------------------------------------------------------------------------
 
 	callback(88, 'Rellenando líneas de factura...')
-	
+
 	try:
 		numItems = len(data)
 		for index, item in enumerate(data):
