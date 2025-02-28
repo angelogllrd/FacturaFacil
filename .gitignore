@@ -175,3 +175,4 @@ cython_debug/
 NOTAS.md
 credenciales.json
 img/
+chromedriver.exe

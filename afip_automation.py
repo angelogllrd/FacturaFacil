@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from datetime import datetime, timedelta
 import json
+# from webdriver_manager.chrome import ChromeDriverManager # Si quisiera automatizar la instalación de WebDriver
 
 
 # Obtengo credenciales desde el archivo JSON
@@ -17,7 +18,7 @@ CLAVE = credentials['clave']
 CUIT_RECEPTOR = credentials['cuit_receptor']
 
 # Ruta del ChromeDriver
-CHROME_DRIVER_PATH = "C:/Users/ag/Desktop/chromedriver.exe"
+CHROME_DRIVER_PATH = 'chromedriver.exe'
 
 
 def automateInvoiceCreation(days, data, callback):
@@ -30,6 +31,7 @@ def automateInvoiceCreation(days, data, callback):
 	options.add_experimental_option('detach', True) # Evita que el navegador se cierre al terminar
 	options.add_argument('--start-maximized') # Inicia el navegador maximizado
 	service = Service(CHROME_DRIVER_PATH)
+	# service = Service(ChromeDriverManager().install()) # Si quisiera automatizar la instalación de WebDriver
 	browser = webdriver.Chrome(service=service, options=options)
 
 	try:
@@ -41,7 +43,10 @@ def automateInvoiceCreation(days, data, callback):
 		WebDriverWait(browser, 10).until(lambda b: len(b.window_handles) > 1)
 		browser.switch_to.window(browser.window_handles[-1])
 	except Exception as e:
-		raise Exception(f'Error entrando al sitio de inicio de sesión: {e}') # Propago el error con contexto
+		if 'err_internet_disconnected' in str(e).lower():
+			raise Exception(f'Parece que no hay conexión a internet...')
+		else:
+			raise Exception(f'Error entrando al sitio de inicio de sesión: {e.__class__.__name__}') # Propago el error con contexto
 
 	callback(11, 'Ingresando credenciales...')
 
@@ -52,7 +57,7 @@ def automateInvoiceCreation(days, data, callback):
 		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'F1:password'))).send_keys(CLAVE)
 		browser.find_element(By.ID, 'F1:btnIngresar').click()
 	except Exception as e:
-		raise Exception(f'Error en el logueo: {e}')
+		raise Exception(f'Error en el logueo: {e.__class__.__name__}')
 
 	callback(22, 'Seleccionando "Comprobantes en línea"...')
 
@@ -68,7 +73,7 @@ def automateInvoiceCreation(days, data, callback):
 		WebDriverWait(browser, 10).until(lambda b: len(b.window_handles) > 2)
 		browser.switch_to.window(browser.window_handles[-1])
 	except Exception as e:
-		raise Exception(f'Error en selección de "Comprobantes en línea": {e}')
+		raise Exception(f'Error en selección de "Comprobantes en línea": {e.__class__.__name__}')
 
 
 	# Se sigue con el sistema RCEL (acrónimo de Registro de Comprobantes en Línea)
@@ -80,7 +85,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono la empresa
 		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn_empresa'))).click()
 	except Exception as e:
-		raise Exception(f'Error en selección de empresa: {e}')
+		raise Exception(f'Error en selección de empresa: {e.__class__.__name__}')
 
 	callback(44, 'Seleccionando "Generar Comprobantes"...')
 
@@ -88,7 +93,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono "Generar Comprobantes"
 		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Generar Comprobantes'))).click()
 	except Exception as e:
-		raise Exception(f'Error en selección de "Generar Comprobantes": {e}')
+		raise Exception(f'Error en selección de "Generar Comprobantes": {e.__class__.__name__}')
 
 	callback(55, 'Seleccionando punto de venta y tipo de factura...')
 
@@ -108,7 +113,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
 	except Exception as e:
-		raise Exception(f'Error en selección de punto de venta y tipo de factura: {e}')
+		raise Exception(f'Error en selección de punto de venta y tipo de factura: {e.__class__.__name__}')
 
 
 	# DATOS DE EMISIÓN (PASO 1 DE 4)
@@ -133,7 +138,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
 	except Exception as e:
-		raise Exception(f'Error en selección de conceptos y fecha de vencimiento: {e}')
+		raise Exception(f'Error en selección de conceptos y fecha de vencimiento: {e.__class__.__name__}')
 
 
 	# DATOS DEL RECEPTOR (PASO 2 DE 4)
@@ -160,7 +165,7 @@ def automateInvoiceCreation(days, data, callback):
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
 	except Exception as e:
-		raise Exception(f'Error en el ingreso de datos del receptor: {e}')
+		raise Exception(f'Error en el ingreso de datos del receptor: {e.__class__.__name__}')
 
 
 	# DATOS DE LA OPERACIÓN (PASO 3 DE 4)
@@ -188,6 +193,6 @@ def automateInvoiceCreation(days, data, callback):
 			if index < len(data) - 1:
 				browser.find_element(By.CSS_SELECTOR, 'input[value="Agregar línea descripción"]').click()
 	except Exception as e:
-		raise Exception(f'Error rellenando líneas de factura: {e}')
+		raise Exception(f'Error rellenando líneas de factura: {e.__class__.__name__}')
 
 	callback(100, 'Factura generada')

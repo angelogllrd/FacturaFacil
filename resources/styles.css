@@ -22,18 +22,7 @@ QPushButton:focus {
     outline: none;        /* Quito la linea punteada de botones cuando obtienen foco */
 }                         /* En Qt Designer ya quité, pero esto quita también a los botones de QMessageBox, Configuración y Acerca de */
 
-
-/*
-QLineEdit, QTextEdit {
-    border: 1px solid #cccccc;
-    border-radius: 2px;
-    padding: 5px;
+#label_estado {
+    background-color: black;
+    padding: 10px;
 }
-QLineEdit:focus {
-    border: 1px solid #404040;
-    background-color: #f2f2f2;
-}
-QTextEdit:focus {
-    border: 1px solid #404040;
-    background-color: #f2f2f2;
-}*/

@@ -18,8 +18,9 @@ class InvoiceAutomationThread(QThread):
 	finished = pyqtSignal() # Señal cuando termina el proceso
 
 	# En PyQt5, los QMessageBox deben mostrarse desde el hilo principal, por eso emito señales para mostrar los mensajes ahí
-	error = pyqtSignal(str) # Señal para errores
-	success = pyqtSignal(str) # Señal para mensajes exitosos
+	error = pyqtSignal(str) # Señal para mensajes de error
+	success = pyqtSignal(str) # Señal para mensaje exitoso
+
 
 	def __init__(self, days, data):
 		super().__init__()
@@ -29,9 +30,13 @@ class InvoiceAutomationThread(QThread):
 
 	def run(self):
 		"""Ejecuta la automatización de la factura en un hilo separado."""
+
+		# Calculo el total que debería mostrarse en el sitio de AFIP
+		total = sum((float(item['precUnit']) for item in self.data)) * 1.21
+
 		try:
 			aa.automateInvoiceCreation(self.days, self.data, self.reportProgress)
-			self.success.emit('La factura se generó correctamente.') # Emito mensaje exitoso
+			self.success.emit(f'La factura se rellenó correctamente.\n\nEl total debería ser ${total:.2f}') # Emito mensaje exitoso
 		except Exception as e:
 			self.error.emit(str(e)) # Emito mensaje de error
 		finally:
@@ -63,9 +68,6 @@ class MainWindow(QMainWindow):
 		self.pushButton.setEnabled(False)
 		self.pushButton.clicked.connect(self.generateInvoice)
 
-		# Barra de progreso
-		self.progressBar.hide() # También podría usar self.progressBar.setVisible(False)
-
 		# Inicializo variables
 		self.oldContent = None
 		self.lastValidTable = None
@@ -84,13 +86,13 @@ class MainWindow(QMainWindow):
 			state, detail = cu.checkClipboard()
 			self.label_estado.setText(detail)
 			if state:
-				self.label_estado.setStyleSheet('color: green; font-weight: bold')
+				self.label_estado.setStyleSheet('color: #00d300;') # Verde
 				self.pushButton.setEnabled(True)
 
 				# Resguardo la tabla validada
 				self.lastValidTable = cu.formatClipboard()
 			else:
-				self.label_estado.setStyleSheet('color: red; font-weight: bold')
+				self.label_estado.setStyleSheet('color: red;')
 				self.pushButton.setEnabled(False)
 
 
@@ -143,10 +145,9 @@ class MainWindow(QMainWindow):
 		self.thread.success.connect(self.showSuccessMessage) # Conecto señal de éxito
 		self.thread.start()
 
-		# Deshabilito botón y muestro barra de progreso
-		self.progressBar.show()
+		# Deshabilito botón y cambio de color la fuente
 		self.pushButton.setEnabled(False)
-		self.label_estado.setStyleSheet('color: orange; font-weight: bold')
+		self.label_estado.setStyleSheet('color: orange;')
 
 
 	def showErrorMessage(self, message):
@@ -167,7 +168,7 @@ class MainWindow(QMainWindow):
 
 	def onInvoiceFinished(self):
 		"""Se ejecuta independientemente de si se creó la factura o hubo error."""
-		self.progressBar.hide()
+		self.progressBar.setValue(0)
 		self.oldContent = '' # Fuerzo análisis del clipboard actual para producir los cambios apropiados en la UI
 		self.timer.start(300)
 

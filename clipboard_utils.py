@@ -52,7 +52,7 @@ def checkClipboard():
 	# Verifico cantidad correcta de columnas (7 hasta "sin IVA", 8 hasta "con IVA")
 	for row in table:
 		if len(row) < 7 or len(row) > 8: 
-			return False, 'Lo copiado no se reconoce como la tabla (copiar desde "OT" hasta "Valor S/IVA")'
+			return False, 'No se reconoce lo copiado\n(copiar de "OT" a "Valor S/IVA")'
 
 	# Verifico contenido de cada columna
 	for row in table:
