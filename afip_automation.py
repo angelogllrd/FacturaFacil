@@ -1,9 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.keys import Keys
 import time
 from datetime import datetime, timedelta
@@ -25,7 +24,7 @@ CHROME_DRIVER_PATH = "C:/Users/ag/Desktop/chromedriver.exe"
 def automateInvoiceCreation(days, data, callback):
 	"""Automatiza la creación de una factura en el sistema de AFIP."""
 
-	callback(0, 'Entrando al sitio de inicio de sesión de AFIP...')
+	callback(0, 'Entrando al inicio de sesión de AFIP...')
 	
 	# Configuración del navegador
 	options = webdriver.ChromeOptions()
@@ -37,24 +36,21 @@ def automateInvoiceCreation(days, data, callback):
 	try:
 		# Abro el sitio de AFIP y selecciono iniciar sesión
 		browser.get('https://www.afip.gob.ar/landing/default.asp')
-		browser.find_element(By.LINK_TEXT, 'Iniciar sesión').click()
-		time.sleep(2) # Espero que se abra la nueva pestaña
+		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Iniciar sesión'))).click()
 
 		# Cambio a la nueva pestaña
+		WebDriverWait(browser, 10).until(lambda b: len(b.window_handles) > 1)
 		browser.switch_to.window(browser.window_handles[-1])
 	except Exception as e:
-		if 'ERR_INTERNET_DISCONNECTED' in str(e):
-			raise Exception(f'No hay conexión a Internet: {e}') # con raise propago el error con contexto
-		else:
-			raise Exception(f'Error entrando al sitio de inicio de sesión: {e}') # Lo mismo acá
-
+		raise Exception(f'Error entrando al sitio de inicio de sesión: {e}') # Propago el error con contexto
+	
 	callback(11, 'Ingresando credenciales...')
 
 	try:
 		# Ingreso CUIT y clave
-		browser.find_element(By.ID, 'F1:username').send_keys(CUIT)
+		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'F1:username'))).send_keys(CUIT)
 		browser.find_element(By.ID, 'F1:btnSiguiente').click()
-		browser.find_element(By.ID, 'F1:password').send_keys(CLAVE)
+		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'F1:password'))).send_keys(CLAVE)
 		browser.find_element(By.ID, 'F1:btnIngresar').click()
 	except Exception as e:
 		raise Exception(f'Error en el logueo: {e}')
@@ -64,16 +60,17 @@ def automateInvoiceCreation(days, data, callback):
 	try:
 		# Accedo a "Comprobantes en línea"
 		btnComprobantes = WebDriverWait(browser, 10).until(
-			EC.element_to_be_clickable((By.XPATH, "//a//*[text()='Comprobantes en línea']"))
-		)																			  # Espera hasta que el botón sea clickeable
-		browser.execute_script("arguments[0].scrollIntoView(true);", btnComprobantes) # Desplazar la ventana para hacer visible el elemento
+			EC.element_to_be_clickable((By.XPATH, '//a//*[text()="Comprobantes en línea"]'))
+		)
+		browser.execute_script('arguments[0].scrollIntoView(true);', btnComprobantes) # Scroll para hacer visible el elemento
 		btnComprobantes.click()
-		time.sleep(1)
 
 		# Cambio a la nueva pestaña
+		WebDriverWait(browser, 10).until(lambda b: len(b.window_handles) > 2)
 		browser.switch_to.window(browser.window_handles[-1])
 	except Exception as e:
 		raise Exception(f'Error en selección de "Comprobantes en línea": {e}')
+
 
 	# Se sigue con el sistema RCEL (acrónimo de Registro de Comprobantes en Línea)
 	# ------------------------------------------------------------------------------------------------
@@ -82,9 +79,7 @@ def automateInvoiceCreation(days, data, callback):
 
 	try:
 		# Selecciono la empresa
-		WebDriverWait(browser, 10).until(
-			EC.element_to_be_clickable((By.CLASS_NAME, 'btn_empresa'))
-		).click()
+		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn_empresa'))).click()
 	except Exception as e:
 		raise Exception(f'Error en selección de empresa: {e}')
 
@@ -92,9 +87,7 @@ def automateInvoiceCreation(days, data, callback):
 
 	try:
 		# Selecciono "Generar Comprobantes"
-		WebDriverWait(browser, 10).until(
-			EC.element_to_be_clickable((By.LINK_TEXT, 'Generar Comprobantes'))
-		).click()
+		WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.LINK_TEXT, 'Generar Comprobantes'))).click()
 	except Exception as e:
 		raise Exception(f'Error en selección de "Generar Comprobantes": {e}')
 
@@ -106,29 +99,31 @@ def automateInvoiceCreation(days, data, callback):
 			EC.element_to_be_clickable((By.ID, 'puntodeventa'))
 		)
 		Select(selectPuntoVenta).select_by_index(1)
-		time.sleep(1) # Espero que se cargue "Tipo de Comprobante" después de seleccionar el punto de venta
+
+		# Selecciono tipo de factura
+		WebDriverWait(browser, 10).until(
+			EC.presence_of_element_located((By.XPATH, "//select[@id='universocomprobante']/option[text()='Factura A']")) # Espero que se carguen las options
+		)
+		Select(browser.find_element(By.ID, 'universocomprobante')).select_by_visible_text('Factura A') # Selecciono "Factura A"
 
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
-		time.sleep(1)
 	except Exception as e:
 		raise Exception(f'Error en selección de punto de venta y tipo de factura: {e}')
+
 
 	# DATOS DE EMISIÓN (PASO 1 DE 4)
 	# ------------------------------------------------------------------------------------------------
 
-	callback(66, 'Seleccionando conceptos a incluir y fecha de vencimiento...')
+	callback(66, 'Seleccionando conceptos y fecha de vencimiento...')
 
 	try:
 		# Selecciono los conceptos a incluir
-		selectConceptos = WebDriverWait(browser, 10).until(
-			EC.element_to_be_clickable((By.ID, 'idconcepto'))
-		)
-		Select(selectConceptos).select_by_value('3') # Selecciona "Productos y Servicios"
-		time.sleep(1) # Espero que se cargue la sección "Período Facturado" que contiene "Vto. para el Pago"
+		selectConceptos = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'idconcepto')))
+		Select(selectConceptos).select_by_value('3') # Selecciono "Productos y Servicios"
 		
 		# Ajuste de fecha de vencimiento
-		inputFecha = browser.find_element(By.ID, 'vencimientopago')
+		inputFecha = WebDriverWait(browser, 10).until(EC.visibility_of_element_located((By.ID, 'vencimientopago')))
 		currentDateStr = inputFecha.get_attribute('value')
 		currentDateObj = datetime.strptime(currentDateStr, '%d/%m/%Y') # Convierto el string de fecha actual a un objeto datetime
 		dueDateObj = currentDateObj + timedelta(days=days) # Agrego los días
@@ -138,9 +133,9 @@ def automateInvoiceCreation(days, data, callback):
 
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
-		time.sleep(1)
 	except Exception as e:
-		raise Exception(f'Error en selección de conceptos a incluir y fecha de vencimiento: {e}')
+		raise Exception(f'Error en selección de conceptos y fecha de vencimiento: {e}')
+
 
 	# DATOS DEL RECEPTOR (PASO 2 DE 4)
 	# ------------------------------------------------------------------------------------------------
@@ -149,23 +144,25 @@ def automateInvoiceCreation(days, data, callback):
 
 	try:
 		# Selecciono la condición frente al IVA
-		selectCondicion = WebDriverWait(browser, 10).until(
-			EC.element_to_be_clickable((By.ID, 'idivareceptor'))
-		)
-		Select(selectCondicion).select_by_value('1') # Selecciona "IVA Responsable Inscripto"
+		selectCondicion = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'idivareceptor')))
+		Select(selectCondicion).select_by_value('1') # Selecciono "IVA Responsable Inscripto"
 
 		# Ingreso "CUIT"
 		browser.find_element(By.ID, 'nrodocreceptor').send_keys(CUIT_RECEPTOR, Keys.ENTER)
-		time.sleep(1)
+
+		# Espero a que se cargue la información del receptor
+		WebDriverWait(browser, 10).until(
+		    lambda b: b.find_element(By.ID, 'razonsocialreceptor').get_attribute('value').strip() != '' # Uso una condición personalizada
+		)
 
 		# Selecciono "Cuenta Corriente"
 		browser.find_element(By.ID, 'formadepago4').click()
 
 		# Selecciono "Continuar"
 		browser.find_element(By.XPATH, "//input[@type='button' and @value='Continuar >']").click()
-		time.sleep(1)
 	except Exception as e:
 		raise Exception(f'Error en el ingreso de datos del receptor: {e}')
+
 
 	# DATOS DE LA OPERACIÓN (PASO 3 DE 4)
 	# ------------------------------------------------------------------------------------------------
