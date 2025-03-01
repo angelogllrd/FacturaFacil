@@ -81,7 +81,7 @@ El programa (así como está) necesita:
 ## Pasar de tabla a estructura de datos
 
 > [!NOTE]
-> Esto explica lo que hace la función `formatClipboard()` de `clipboard_utils.py`, que toma una porción de planilla copiado como texto plano, y la transformaa a una estructura de datos más manejable.
+> Esto explica lo que hace la función `formatClipboard()` de `clipboard_utils.py`, que toma una porción de planilla copiada como texto plano, y la transformaa a una estructura de datos más manejable.
 
 Si copio esta porción de tabla de Google Sheets (o Excel):
 
