@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
 		self.timer.stop()
 
 		# Verifico si el OCL está vacio y muestro un mensaje
-		if not self.lineEdit_ocl.text():
+		if not self.lineEdit_ocl.text().strip():
 			msg = QMessageBox(self)
 			msg.setIcon(QMessageBox.Warning)
 			msg.setWindowTitle('Confirmación')
@@ -128,8 +128,9 @@ class MainWindow(QMainWindow):
 		for row in self.lastValidTable:
 			# Formo lo que va en el input de Producto/Servicio
 			descPart = row[cu.colToInd['descripcion']]
-			otPart = f'{' ' if descPart.endswith('.') else '. '}OT {row[cu.colToInd['ot']]}'
-			oclPart = f'{'. OCL ' + self.lineEdit_ocl.text() if self.lineEdit_ocl.text() else ''}'
+			ot = row[cu.colToInd['ot']]
+			otPart = f"{' ' if descPart.endswith('.') else '. '}{'Sin OT' if ot == '' else f'OT {ot}'}"
+			oclPart = f'{'. OCL ' + self.lineEdit_ocl.text().strip() if self.lineEdit_ocl.text().strip() else ''}'
 			prodServ = f'{descPart}{otPart}{oclPart}'
 
 			# Formo lo que va en el input de "Prec. Unitario"

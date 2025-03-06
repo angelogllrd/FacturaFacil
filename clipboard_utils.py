@@ -61,7 +61,7 @@ def checkClipboard():
 	for row in table:
 		# Columna "OT"
 		ot = row[colToInd['ot']]
-		if not ot.isdecimal() and ot != '#N/A':
+		if not ot.isdecimal() and ot != '#N/A' and ot != '':
 			return False, f'"OT" con formato inválido: {ot}'
 
 		# Columna "Fecha"
