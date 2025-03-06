@@ -21,6 +21,9 @@ def formatClipboard():
 	# Obtengo el contenido del portapapeles
 	cb = pyperclip.paste()
 
+	# Normalizo saltos de línea a solo \n (a veces hay "\r\n" dentro del texto de las celdas)
+	cb = cb.replace('\r\n', '\n')
+
 	# Reemplazo saltos de línea dentro de las celdas por un espacio
 	cb = re.sub(r'(\t".*?"\t)', lambda m: m.group(1).replace('\n', ' '), cb, flags=re.DOTALL)
 
