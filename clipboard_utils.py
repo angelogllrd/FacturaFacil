@@ -9,9 +9,8 @@ colToInd = {
 	'solicitante': 2,
 	'sector': 3,
 	'descripcion': 4,
-	'entrega': 5,
-	'siniva': 6,
-	'coniva': 7
+	'siniva': 5,
+	'coniva': 6
 }
 
 
@@ -52,9 +51,9 @@ def checkClipboard():
 	if not table:
 		return False, 'No se copió nada'
 
-	# Verifico cantidad correcta de columnas (7 hasta "sin IVA", 8 hasta "con IVA")
+	# Verifico cantidad correcta de columnas (6 hasta "sin IVA", 7 hasta "con IVA")
 	for row in table:
-		if len(row) < 7 or len(row) > 8: 
+		if len(row) < 6 or len(row) > 7: 
 			return False, 'No se reconoce lo copiado\n(copiar de "OT" a "Valor S/IVA")'
 
 	# Verifico contenido de cada columna
@@ -81,10 +80,10 @@ def checkClipboard():
 
 		# Columna "Sector"
 		sector = row[colToInd['sector']]
-		if not sector.isalpha() and len(sector) > 10 and sector != '#N/A':
+		if not sector.replace('.', '').isalpha() and len(sector) > 10 and sector != '#N/A':
 			return False, f'"Sector" con formato inválido: {sector}'
 
-		# Columnas "Descripción" y "Entrega" no las controlo
+		# Columna "Descripción" no la controlo
 
 		# Columna "Valor S/IVA"
 		siniva = row[colToInd['siniva']]
@@ -93,7 +92,7 @@ def checkClipboard():
 			return False, f'"Valor S/IVA" con formato inválido: {siniva}'
 
 		# Columna "Valor c/IVA"
-		if len(row) == 8:
+		if len(row) == 7:
 			coniva = row[colToInd['coniva']]
 			conivaLimpio = coniva.replace('$', '').replace('.', '')
 			if not conivaLimpio.isdecimal() and conivaLimpio.count(',') != 1:

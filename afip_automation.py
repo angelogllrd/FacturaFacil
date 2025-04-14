@@ -4,9 +4,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager # Si quisiera automatizar la instalación de WebDriver
 from datetime import datetime, timedelta
 import json
-# from webdriver_manager.chrome import ChromeDriverManager # Si quisiera automatizar la instalación de WebDriver
 
 
 # Obtengo credenciales desde el archivo JSON
@@ -18,7 +18,7 @@ CLAVE = credentials['clave']
 CUIT_RECEPTOR = credentials['cuit_receptor']
 
 # Ruta del ChromeDriver
-CHROME_DRIVER_PATH = 'chromedriver.exe'
+# CHROME_DRIVER_PATH = 'chromedriver.exe' # Si quisiera usar una versión específica del driver
 
 
 def automateInvoiceCreation(days, data, callback):
@@ -30,8 +30,8 @@ def automateInvoiceCreation(days, data, callback):
 	options = webdriver.ChromeOptions()
 	options.add_experimental_option('detach', True) # Evita que el navegador se cierre al terminar
 	options.add_argument('--start-maximized') # Inicia el navegador maximizado
-	service = Service(CHROME_DRIVER_PATH)
-	# service = Service(ChromeDriverManager().install()) # Si quisiera automatizar la instalación de WebDriver
+	# service = Service(CHROME_DRIVER_PATH) # Si quisiera usar una versión específica del driver
+	service = Service(ChromeDriverManager().install()) # Si quisiera automatizar la instalación de WebDriver
 	browser = webdriver.Chrome(service=service, options=options)
 
 	try:
