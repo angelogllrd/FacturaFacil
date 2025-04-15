@@ -1,3 +1,4 @@
 pyperclip==1.9.0
 PyQt5==5.15.11
-selenium==4.29.0
+selenium==4.31.0
+webdriver_manager==4.0.2
