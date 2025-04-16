@@ -23,12 +23,13 @@ GUI para automatizar la creación de facturas en la web de AFIP/ARCA usando Sele
     o bien ejecutar directamente esto:
 
     ```
-    pip install PyQt5 selenium pyperclip
+    pip install PyQt5 selenium pyperclip webdriver-manager
     ```
 3. Ejecutar main.py:
     ```
     python main.py
     ```
+
 El programa (así como está) necesita:
 1. Google Chrome instalado.
 
@@ -42,52 +43,34 @@ El programa (así como está) necesita:
     ```
     que se usará para ingresar a la cuenta de AFIP, y seleccionar el destinatario de la factura.
 
-3. `chromedriver.exe` en la carpeta del proyecto, compatible con la versión instalada de Chrome. Se descarga de [acá](https://developer.chrome.com/docs/chromedriver/downloads) (versiones de Chrome anteriores a la 115) o [acá](https://googlechromelabs.github.io/chrome-for-testing/#stable) (versión 115 o posteriores). 
-
-    También se puede usar **webdriver-manager**, que se encarga de instalar y actualizar el driver automáticamente:
-    
-    * Instalar **webdriver-manager**:
-        
-        ```
-        pip install webdriver-manager
-        ```
-    * En `afip_automation.py` debe modificarse lo siguiente:
-
-        ```
-        # Descomentar
-        from webdriver_manager.chrome import ChromeDriverManager
-
-        # Comentar
-        # service = Service(CHROME_DRIVER_PATH)
-
-        # Descomentar
-	    service = Service(ChromeDriverManager().install())
-        ```
-    
-4. Que se copie al portapapeles, desde Excel o Google Sheets, una porción de tabla de 7 u 8 columnas de la forma:
+3. Que se copie al portapapeles, desde Excel o Google Sheets, una porción de tabla de 6 o 7 columnas de la forma:
    
     <table>
-      <tr><td>9232</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>Hecho</td><td>$12.345</td><td>$20.500</td></tr>
-      <tr><td>9157</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>Hecho</td><td>$67.898</td><td>$392.200</td></tr>
-      <tr><td>9278</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>Hecho</td><td>$76.543</td><td>$33.3428</td></tr>
+      <tr><td>9232</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>$12.345</td><td>$20.500</td></tr>
+      <tr><td>9157</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>$67.898</td><td>$392.200</td></tr>
+      <tr><td>9278</td><td>27/1/2025</td><td>SA</td><td>TINT</td><td>descripción del trabajo</td><td>$76.543</td><td>$33.3428</td></tr>
     </table>
 
     donde:
    
-    |col1|col2|col3|col4|col5|col6|col7|col8|
-    |---|---|---|---|---|---|---|---|
-    |String de números decimales (0-9)| Fecha con año de 4 digitos al inicio o al final y separadores "-", "/", o "." | String alfabético (a-zA-Z) con longitud no mayor a 10 | Idem columna anterior | No se controla | No se controla | String de dinero sin "$" ni "." con números decimales (0-9) y como máximo una "," | (OPCIONAL) Idem columna anterior
+    |col1|col2|col3|col4|col5|col6|col7|
+    |---|---|---|---|---|---|---|
+    |String de números decimales (0-9)| Fecha con año de 4 digitos al inicio o al final y separadores "-", "/", o "." | String alfabético (a-zA-Z) con longitud no mayor a 10 | Idem columna anterior | No se controla | String de dinero sin "$" ni "." con números decimales (0-9) y como máximo una "," | (OPCIONAL) Idem columna anterior
+
+> [!NOTE]
+Antes se necesitaba tener en la carpeta del proyecto el driver (`chromedriver.exe`) compatible con la versión instalada de Chrome (se puede descargar de [acá](https://developer.chrome.com/docs/chromedriver/downloads) para versiones de Chrome anteriores a la 115) o [acá](https://googlechromelabs.github.io/chrome-for-testing/#stable) para versión 115 o posteriores). Sin embargo, esto **no es recomendable**, porque si Chrome se actualiza el driver deja de ser compatible con la nueva versión, y debe descargarse manualmente un driver mas actualizado.
+Lo correcto (y lo que hace el programa) es usar **webdriver-manager**, que se encarga automáticamente de descargar y usar la versión correcta de ChromeDriver compatible con el Chrome que tenemos instalado.
 
 ## Pasar de tabla a estructura de datos
 
 > [!NOTE]
-> Esto explica lo que hace la función `formatClipboard()` de `clipboard_utils.py`, que toma una porción de planilla copiada como texto plano, y la transformaa a una estructura de datos más manejable.
+> Esto explica lo que hace la función `formatClipboard()` de `clipboard_utils.py`, que toma una porción de planilla copiada como texto plano, y la transforma a una estructura de datos más manejable.
 
 Si copio esta porción de tabla de Google Sheets (o Excel):
 
 ![img1](https://github.com/user-attachments/assets/aa1d496b-0d68-4289-bbfa-02b342522f00)
 
-y la pego en el editor, se ve así:
+y la pego en el editor, se verá así:
 
 ```
 9038	29/1/2025	Lorem ipsum dolor sit amet, consectetur adipiscing elit	$101.157
@@ -117,11 +100,11 @@ que devuelve:
 '9038\t29/1/2025\tLorem ipsum dolor sit amet, consectetur adipiscing elit\t$101.157\r\n9233\t27/1/2025\t"Nulla ut lorem a orci pulvinar ornare euismod at eros.\nAliquam commodo dapibus\nPellentesque auctor vestibulum"\t$55.124\r\n9221\t5/2/2025\tSed luctus est sit amet justo vestibulum, vel rutrum erat vulputate.\t$172.066\r\n9158\t28/12/2024\t"Aenean non odio accumsan, ornare turpis et.\nPraesent pretium facilisis consequat"\t$721.364'
 ```
 
-Para diferenciar los saltos de línea dentro de celdas con los que separan filas podemos:
-* **Reemplazar los `\n` que no son precedidos por un `\r`:** El `\r` es un "carriage return" (retorno de carro) y aparece porque el texto copiado usa `\r\n` (retorno de carro + nueva línea) como separador de líneas, lo cual es común en sistemas Windows. Solamente los saltos de línea de nuevas filas tienen un `\r` antes.
-* **Reemplazar todos los \n que están entre `\t"` y `"\t`:** Las celdas con texto en varias lineas se pegan con comillas dobles en el inicio y final del texto. Como este puede tener, a su vez, comillas dobles dentro, puedo diferenciar las iniciales y finales porque están pegadas a un `\t` que marca la separación con la columna anterior y posterior.
+Entonces, para diferenciar los saltos de línea dentro de celdas podemos seguir la siguiente regla:
+> [!TIP]
+> **Reemplazar todos los \n que están entre `\t"` y `"\t`:** Las celdas con texto en varias lineas se pegan con comillas dobles en el inicio y final del texto. Como este puede tener, a su vez, comillas dobles dentro, puedo diferenciar las iniciales y finales porque están pegadas a un `\t` que marca la separación con la columna anterior y posterior.
 
-Para hacer lo segundo, uso lo siguiente:
+Para hacerlo, uso lo siguiente:
 
 ```
 cb = re.sub(r'(\t".*?"\t)', lambda m: m.group(1).replace('\n', ' '), cb, flags=re.DOTALL)
