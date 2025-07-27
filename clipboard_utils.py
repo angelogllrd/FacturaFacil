@@ -66,9 +66,9 @@ def checkClipboard():
 		# Columna "Fecha"
 		fecha = row[colToInd['fecha']]
 		dateRegex = r'''
-			\d{4}[-/.]\d{1,2}[-/.]\d{1,2} # Captura fechas con el año primero
+			\d{2,4}[-/.]\d{1,2}[-/.]\d{1,2} # Captura fechas con el año primero
 			|							  # o...
-			\d{1,2}[-/.]\d{1,2}[-/.]\d{4} # Captura fechas con el año al final
+			\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4} # Captura fechas con el año al final
 		'''
 		if not re.match(dateRegex, fecha, re.VERBOSE) and fecha != '#N/A':
 			return False, f'"Fecha" con formato inválido: {fecha}'
